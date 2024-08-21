@@ -4,7 +4,6 @@ on:
   push:
     branches: [ 'main' ]
   pull_request:
-
 env:
   REGISTRY: ghcr.io
   NAMESPACED_REGISTRY: ghcr.io/apollographql/ci-utility-docker-images
@@ -30,7 +29,7 @@ jobs:
         run: |
           CHANGED_DIRS=$(echo "${{ steps.calculate_changed_files.outputs.all_changed_files }}" | jq -c '[.[] | select(. |  contains(".") | not)'])
           echo "changed_dirs=$CHANGED_DIRS" >> "$GITHUB_OUTPUT"
-  build-and-push-image:
+  build-and-push-images:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -107,6 +106,14 @@ jobs:
         with:
           tag_name: ${{ matrix.changed_dir }}/v${{ steps.calculate_version.outputs.version }}
           release_name: ${{ matrix.changed_dir }} - v${{ steps.calculate_version.outputs.version }}
-
+  check-builds-all-completes:
+    name: Docker Images Built & Pushed
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    needs:
+      - build-and-push-images
+    steps:
+      - run: |
+          exit ${{ (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')) && 1 || 0 }}
 
 
