@@ -55,6 +55,7 @@ jobs:
         run: |
           echo "desired_version=$(cat ${{ github.workspace }}/${{ matrix.changed_dir }}/config.yml | yq '.version')" >> "$GITHUB_OUTPUT"
           echo "platforms=$(cat ${{ github.workspace }}/${{ matrix.changed_dir }}/config.yml | yq '.platforms | join(",")')" >> "$GITHUB_OUTPUT"
+          echo "description=$(cat ${{ github.workspace }}/${{ matrix.changed_dir }}/config.yml | yq '.description')" >> "$GITHUB_OUTPUT"
       - name: Check Image to Build Does Not Already Exist
         run: |
           if docker manifest inspect ${{ env.NAMESPACED_REGISTRY }}/${{ matrix.changed_dir }}:${{ steps.extract_from_config_yaml.outputs.desired_version }} > /dev/null; then
@@ -71,11 +72,23 @@ jobs:
       - name: Get Docker Metadata
         id: meta
         uses: docker/metadata-action@v5
+        env:
+          DOCKER_METADATA_PR_HEAD_SHA: true
         with:
           images: ${{ env.NAMESPACED_REGISTRY }}/${{ matrix.changed_dir }}
           tags: |
             type=semver,pattern={{version}},value=v${{ steps.calculate_version.outputs.version }}
-            type=sha
+            type=sha,prefix=
+          labels: |
+            org.opencontainers.image.title=${{ matrix.changed_dir }}
+            org.opencontainers.image.description=${{ steps.extract_from_config_yaml.outputs.description }}
+            org.opencontainers.image.vendor=Apollo GraphQL
+            org.opencontainers.image.licenses=MIT
+          annotations: |
+            org.opencontainers.image.title=${{ matrix.changed_dir }}
+            org.opencontainers.image.description=${{ steps.extract_from_config_yaml.outputs.description }}
+            org.opencontainers.image.vendor=Apollo GraphQL
+            org.opencontainers.image.licenses=MIT
       - name: Build and Push Docker image
         id: push
         uses: docker/build-push-action@v6
@@ -84,22 +97,18 @@ jobs:
           file: ${{ github.workspace }}/${{ matrix.changed_dir }}/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: ${{ steps.extract_from_config_yaml.outputs.platforms }}
-      - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.NAMESPACED_REGISTRY }}/${{ matrix.changed_dir }}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
       - name: Create Git Tag
-        if: ${{ github.event_name != 'pull_request' }}
         uses: mathieudutour/github-tag-action@v6.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           default_bump: false
           default_prerelease_bump: false
           custom_tag: ${{ matrix.changed_dir }}/v${{ steps.calculate_version.outputs.version }}
+          dry_run: ${{ github.event_name == 'pull_request' }}
+          tag_prefix: ""
       - name: Create GitHub Release
         if: ${{ github.event_name != 'pull_request' }}
         uses: comnoco/create-release-action@v2.0.5
