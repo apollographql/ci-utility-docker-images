@@ -112,6 +112,8 @@ jobs:
       - name: Create GitHub Release
         if: ${{ github.event_name != 'pull_request' }}
         uses: comnoco/create-release-action@v2.0.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ matrix.changed_dir }}/v${{ steps.calculate_version.outputs.version }}
           release_name: ${{ matrix.changed_dir }} - v${{ steps.calculate_version.outputs.version }}
