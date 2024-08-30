@@ -30,6 +30,7 @@ jobs:
           CHANGED_DIRS=$(echo "${{ steps.calculate_changed_files.outputs.all_changed_files }}" | jq -c '[.[] | select(. |  contains(".") | not)'])
           echo "changed_dirs=$CHANGED_DIRS" >> "$GITHUB_OUTPUT"
   build-and-push-images:
+    if: ${{ needs.calculate-images-to-build.outputs.changed_dirs != '' && toJson(fromJson(needs.calculate-images-to-build.outputs.changed_dirs)) != '[]' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
