@@ -1,7 +1,7 @@
 # The SHA below is rust:1.80.1-alpine3.19, fixing to a specific SHA
 # rather than a mutable tag, stops rebuilds completely changing the
 # contents of the container without us realising.
-FROM rust@sha256:b3ac1f65cf33390407c9b90558eb41e7a8311c47d836fca5800960f1aa2d11d5
+FROM rust@sha256:29fe4376919e25b7587a1063d7b521d9db735fc137d3cf30ae41eb326d209471
 
 # Update packages and package manager to keep us current
 RUN apk update && apk upgrade
