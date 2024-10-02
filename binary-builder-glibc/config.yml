@@ -1,4 +1,4 @@
-version: 0.1.1
+version: 0.1.2
 description: Builder image for Rust binaries that must be built with the correct glibc version
 platforms:
   - linux/arm64
