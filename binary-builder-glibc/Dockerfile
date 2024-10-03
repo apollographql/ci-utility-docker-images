@@ -1,6 +1,6 @@
 # Fixing to a specific SHA rather than a mutable tag, stops rebuilds completely
 # changing the contents of the container without us realising.
-FROM rockylinux:8@sha256:9794037624aaa6212aeada1d28861ef5e0a935adaf93e4ef79837119f2a2d04c
+FROM rockylinux:9@sha256:d7be1c094cc5845ee815d4632fe377514ee6ebcf8efaed6892889657e5ddaaa6
 
 # renovate: datasource=github-releases depName=rust-lang/rust extractVersion=^v(?<version>.*)$
 ARG RUST_VERSION=1.80.1
