@@ -1,9 +1,10 @@
-# The SHA below is rockylinux:8.9.20231119, fixing to a specific SHA
-# rather than a mutable tag, stops rebuilds completely changing the
-# contents of the container without us realising.
-FROM rockylinux:8.9.20231119@sha256:9794037624aaa6212aeada1d28861ef5e0a935adaf93e4ef79837119f2a2d04c
+# Fixing to a specific SHA rather than a mutable tag, stops rebuilds completely
+# changing the contents of the container without us realising.
+FROM rockylinux:8@sha256:9794037624aaa6212aeada1d28861ef5e0a935adaf93e4ef79837119f2a2d04c
 
+# renovate: datasource=github-releases depName=rust-lang/rust extractVersion=^v(?<version>.*)$
 ARG RUST_VERSION=1.80.1
+# Don't set this to bump automatically as it should move as the version does that's bundled with Alpine
 ARG NODE_VERSION=20.15.1
 
 # Add .cargo/bin to PATH
