@@ -5,12 +5,24 @@
     // done manually
     {
       "matchFileNames": [
-        "Dockerfile"
+        "(^|/)Dockerfile$",
+        "(^|/)Dockerfile\\.[^/]*$"
       ],
       "matchUpdateTypes": [
         "major"
       ],
       "enabled": false
+    }
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": [
+        "(^|/)Dockerfile$",
+        "(^|/)Dockerfile\\.[^/]*$"
+      ],
+      "matchStrings": [
+        "#\\srenovate:\\sdatasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?( extractVersion=(?<extractVersion>.*?))?\\s(ENV|ARG) .*?_VERSION=(?<currentValue>.*)\\s"
+      ]
     }
   ]
 }
