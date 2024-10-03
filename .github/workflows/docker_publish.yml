@@ -16,10 +16,10 @@ jobs:
       changed_dirs: ${{ steps.filter_config_directories.outputs.changed_dirs }}
     steps:
       - name: "Checkout repository"
-        uses: actions/checkout@v4
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
       - name: "Calculate changed files directories"
         id: calculate_changed_files
-        uses: tj-actions/changed-files@v45
+        uses: tj-actions/changed-files@48d8f15b2aaa3d255ca5af3eba4870f807ce6b3c
         with:
           dir_names: true
           dir_names_exclude_current_dir: true
@@ -44,9 +44,9 @@ jobs:
         changed_dir: ${{ fromJSON(needs.calculate-images-to-build.outputs.changed_dirs ) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
       - name: Log in to the Container Registry
-        uses: docker/login-action@3b8fed7e4b60203b2aa0ecc6c6d6d91d12c06760
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -69,10 +69,10 @@ jobs:
           VERSION=${{ github.event_name == 'pull_request' && format('{0}-PR{1}.{2}', steps.extract_from_config_yaml.outputs.desired_version, github.event.number, github.event.pull_request.head.sha) || steps.extract_from_config_yaml.outputs.desired_version}}
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8026d2bc3645ea78b0d2544766a1225eb5691f89
       - name: Get Docker Metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
         env:
           DOCKER_METADATA_PR_HEAD_SHA: true
         with:
@@ -92,7 +92,7 @@ jobs:
             org.opencontainers.image.licenses=MIT
       - name: Build and Push Docker image
         id: push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75
         with:
           context: ${{ github.workspace }}/${{ matrix.changed_dir }}
           file: ${{ github.workspace }}/${{ matrix.changed_dir }}/Dockerfile
@@ -102,7 +102,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: ${{ steps.extract_from_config_yaml.outputs.platforms }}
       - name: Create Git Tag
-        uses: mathieudutour/github-tag-action@v6.2
+        uses: mathieudutour/github-tag-action@a22cf08638b34d5badda920f9daf6e72c477b07b
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           default_bump: false
@@ -112,7 +112,7 @@ jobs:
           tag_prefix: ""
       - name: Create GitHub Release
         if: ${{ github.event_name != 'pull_request' }}
-        uses: comnoco/create-release-action@v2.0.5
+        uses: comnoco/create-release-action@7dea6dc82ac9d97ced7a764aa82811451bba80e0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
