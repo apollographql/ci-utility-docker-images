@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@cbb722410c2e876e24abbe8de2cc27693e501dcb
       - name: "Calculate changed files directories"
         id: calculate_changed_files
-        uses: tj-actions/changed-files@b26581aca1189461ba1d1a7c68188cbf63cbdc83
+        uses: tj-actions/changed-files@602aacf9499eb8db19a40262c7944f1088fbeadb
         with:
           dir_names: true
           dir_names_exclude_current_dir: true
