@@ -73,7 +73,7 @@ jobs:
         uses: docker/setup-buildx-action@0f069ddc17b8eb78586b08a7fe335fd54649e2d3
       - name: Get Docker Metadata
         id: meta
-        uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
+        uses: docker/metadata-action@b53be03109c4ef6f6cc7aa545b84b17a7fe51c1e
         env:
           DOCKER_METADATA_PR_HEAD_SHA: true
         with:
