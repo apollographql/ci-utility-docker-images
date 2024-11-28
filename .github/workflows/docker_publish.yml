@@ -113,7 +113,7 @@ jobs:
           tag_prefix: ""
       - name: Create GitHub Release
         if: ${{ github.event_name != 'pull_request' }}
-        uses: comnoco/create-release-action@7dea6dc82ac9d97ced7a764aa82811451bba80e0
+        uses: comnoco/create-release-action@6ac85b5a67d93e181c1a8f97072e2e3ffc582ec4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
