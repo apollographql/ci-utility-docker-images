@@ -70,7 +70,7 @@ jobs:
           VERSION=${{ github.event_name == 'pull_request' && format('{0}-PR{1}.{2}', steps.extract_from_config_yaml.outputs.desired_version, github.event.number, github.event.pull_request.head.sha) || steps.extract_from_config_yaml.outputs.desired_version}}
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@6524bf65af31da8d45b59e8c27de4bd072b392f5
+        uses: docker/setup-buildx-action@6a25f988bdfa969e96a38fc9f843ea31e0b5df27
       - name: Get Docker Metadata
         id: meta
         uses: docker/metadata-action@906ecf0fc0a80f9110f79d9e6c04b1080f4a2621
