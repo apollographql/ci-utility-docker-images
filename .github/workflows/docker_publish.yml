@@ -16,7 +16,7 @@ jobs:
       changed_dirs: ${{ steps.filter_config_directories.outputs.changed_dirs }}
     steps:
       - name: "Checkout repository"
-        uses: actions/checkout@cbb722410c2e876e24abbe8de2cc27693e501dcb
+        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
       - name: "Calculate changed files directories"
         id: calculate_changed_files
         uses: tj-actions/changed-files@5dc51d34076557d9ab904ba22d0107a7aa9c73c6
@@ -45,7 +45,7 @@ jobs:
         changed_dir: ${{ fromJSON(needs.calculate-images-to-build.outputs.changed_dirs ) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@cbb722410c2e876e24abbe8de2cc27693e501dcb
+        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
       - name: Log in to the Container Registry
         uses: docker/login-action@327cd5a69de6c009b9ce71bce8395f28e651bf99
         with:
