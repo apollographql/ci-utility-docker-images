@@ -1,5 +1,8 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>apollographql/renovate-config-apollo-open-source:default.json5"
+  ],
+  "minimumReleaseAge": "3 days",
   "packageRules": [
     // Ensure that we don't get automated bumps to new major versions of base images, these will always be
     // done manually
