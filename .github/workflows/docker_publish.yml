@@ -103,7 +103,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: ${{ steps.extract_from_config_yaml.outputs.platforms }}
       - name: Create Git Tag
-        uses: mathieudutour/github-tag-action@9d35d648e836d5db77936aa35a3a5c7bc16092c8
+        uses: mathieudutour/github-tag-action@a22cf08638b34d5badda920f9daf6e72c477b07b
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           default_bump: false
