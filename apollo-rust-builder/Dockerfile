@@ -2,8 +2,12 @@
 # changing the contents of the container without us realising.
 FROM rockylinux:8-minimal@sha256:c584db6d77f40a71ab2364b55be18c154b8e92ba48189e2d82ba0aef64ffee32
 
-# renovate: datasource=github-releases depName=rust-lang/rust extractVersion=^v(?<version>.*)$
+# renovate: datasource=github-releases depName=rust-lang/rust
 ARG RUST_VERSION=1.85.1
+# renovate: datasource=github-releases depName=mikefarah/yq extractVersion=^v(?<version>.*)$
+ARG YQ_VERSION=4.44.6
+# renovate: datasource=github-releases depName=volta-cli/volta extractVersion=^v(?<version>.*)$
+ARG VOLTA_VERSION=2.0.1
 # Don't set this to bump automatically as it should move as the version does that's bundled with Alpine
 ARG NODE_VERSION=20.15.1
 ARG TARGETPLATFORM
@@ -24,7 +28,7 @@ RUN microdnf install --nodocs --noplugins yum-utils && \
     rm -rf /var/cache/yum
 
 # Add yq
-RUN wget https://github.com/mikefarah/yq/releases/latest/download/yq_${TARGETPLATFORM/\//_} -O /usr/bin/yq && chmod +x /usr/bin/yq
+RUN wget https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_${TARGETPLATFORM/\//_} -O /usr/bin/yq && chmod +x /usr/bin/yq
 
 # Install RustUp and add specific target
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y --default-toolchain=$RUST_VERSION --profile=minimal
@@ -41,5 +45,5 @@ RUN case $TARGETPLATFORM in \
     esac
 
 # Install Volta (and Node)
-RUN curl https://get.volta.sh | bash
+RUN curl https://get.volta.sh | bash -s -- --version $VOLTA_VERSION
 RUN volta install node@$NODE_VERSION
