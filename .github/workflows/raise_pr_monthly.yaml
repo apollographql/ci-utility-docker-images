@@ -55,7 +55,10 @@ jobs:
         with:
           pattern: new-version_*
       - name: Move the configs to their new location
-        run: mmv *_config.yaml '${{ github.workspace }}/#1/config.yaml'
+        run: |
+          apt-get update
+          apt-get install -y mmv
+          mmv *_config.yaml '${{ github.workspace }}/#1/config.yaml'
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
         with:
