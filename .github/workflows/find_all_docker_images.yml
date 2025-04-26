@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
       - id: find-folders
-        uses: SuperEvilMegacorp/list-folders-action@v9
+        uses: SuperEvilMegacorp/list-folders-action@5f9fce10cea7c4e4f094e6638e7209865af5501e
         with:
           path: ${{ github.workspace }}
       - name: "Filter out config directories"

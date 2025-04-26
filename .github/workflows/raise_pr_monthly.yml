@@ -3,10 +3,11 @@ name: Raise PR for Monthly Version Bump
 on:
   schedule:
     - cron: '0 9 1 * *' # Run at midnight each Sunday
+  workflow_dispatch: { }
 
 jobs:
   find-all-docker-images:
-    uses: .github/workflows/find_all_docker_images.yaml
+    uses: ./.github/workflows/find_all_docker_images.yml
   create-new-config-yamls:
     name: "Calculate and Store New config.yaml"
     runs-on: ubuntu-latest
@@ -22,8 +23,9 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Extract Details From config.yml
         id: extract_from_config_yaml
-        run: |
-          echo "current_version=$(cat ${{ github.workspace }}/${{ matrix.image_directory }}/config.yml | yq '.version')" >> "$GITHUB_OUTPUT"
+        uses: ./.github/workflows/extract_details_from_config.yml
+        with:
+          config_yaml_path: ${{ github.workspace }}/${{ matrix.changed_dir }}/config.yaml
       - name: Bump Minor Version
         id: bump
         uses: cbrgm/semver-bump-action@main
