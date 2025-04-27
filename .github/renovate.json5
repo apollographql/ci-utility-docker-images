@@ -29,5 +29,9 @@
         '# renovate: datasource=(?<datasource>[a-z-]+?)(?: depName=(?<depName>.+?))?(?: extractVersion=(?<extractVersion>.*))?(?:^|\\r\\n|\\r|\\n|$)(?:ENV|ARG) .+?_VERSION=(?<currentValue>.+?)(?:^|\\r\\n|\\r|\\n|$)'
       ]
     }
-  ]
+  ],
+  schedule: [
+    "* * * * * *"
+  ],
+  updateNotScheduled: true
 }
