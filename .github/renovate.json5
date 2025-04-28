@@ -17,6 +17,7 @@
       "enabled": false
     }
   ],
+  // Allow ourselves to specify bits in Docker Images that should be updated by Renovate as well
   "customManagers": [
     {
       "customType": "regex",
@@ -25,8 +26,12 @@
         "(^|/)Dockerfile\\.[^/]*$"
       ],
       "matchStrings": [
-        "#\\srenovate:\\sdatasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?( extractVersion=(?<extractVersion>.*?))?\\s(ENV|ARG) .*?_VERSION=(?<currentValue>.*)\\s"
+        '# renovate: datasource=(?<datasource>[a-z-]+?)(?: depName=(?<depName>.+?))?(?: extractVersion=(?<extractVersion>.*))?(?:^|\\r\\n|\\r|\\n|$)(?:ENV|ARG) .+?_VERSION=(?<currentValue>.+?)(?:^|\\r\\n|\\r|\\n|$)'
       ]
     }
-  ]
+  ],
+  schedule: [
+    "* * * * * *"
+  ],
+  updateNotScheduled: true
 }
