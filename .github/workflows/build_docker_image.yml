@@ -1,0 +1,68 @@
+name: "Build Docker Image"
+
+on:
+  workflow_call:
+    inputs:
+      directory:
+        type: string
+        description: "The folder that contains the Dockerfile and all that's needed to build the image"
+        required: true
+      image_name:
+        type: string
+        description: "The name of the image to build"
+        required: true
+      image_registry:
+        type: string
+        description: "The registry the image should be pushed to"
+        required: true
+      description:
+        type: string
+        description: "A description of the image being built"
+        required: true
+      tags:
+        type: string
+        description: "A multi-line string that can be passed to the docker/metadata-action"
+        required: true
+      platforms:
+        type: string
+        description: "A comma separated list of the platforms to build for"
+        required: true
+
+jobs:
+  build_docker_image:
+    name: Build Docker Image (${{ inputs.image_name }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@941183f0a080fa6be59a9e3d3f4108c19a528204
+      - name: Get Docker Metadata
+        id: meta
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804
+        env:
+          DOCKER_METADATA_PR_HEAD_SHA: true
+        with:
+          images: ${{ inputs.image_registry }}/${{ inputs.image_name }}
+          tags: ${{ inputs.tags }}
+          labels: |
+            org.opencontainers.image.title=${{ inputs.image_name }}
+            org.opencontainers.image.description=${{ inputs.description }}
+            org.opencontainers.image.vendor=Apollo GraphQL
+            org.opencontainers.image.licenses=MIT
+          annotations: |
+            org.opencontainers.image.title=${{ inputs.image_name }}
+            org.opencontainers.image.description=${{ inputs.description }}
+            org.opencontainers.image.vendor=Apollo GraphQL
+            org.opencontainers.image.licenses=MIT
+      - name: Build and Push Docker image
+        id: push
+        uses: docker/build-push-action@67dc78bbaf388b3265f7e1c880e681f4b90d5f48
+        with:
+          context: ${{ inputs.directory }}
+          file: ${{ inputs.directory }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: ${{ inputs.platforms }}

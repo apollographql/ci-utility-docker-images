@@ -1,0 +1,25 @@
+on:
+  workflow_call:
+    outputs:
+      docker_images:
+        description: "List of all the directories of Docker Images that need to be built"
+        value: ${{ jobs.find-all-docker-images.outputs.folders }}
+
+jobs:
+  find-all-docker-images:
+    name: Find All Docker Images
+    runs-on: ubuntu-latest
+    outputs:
+      folders: ${{ steps.filter_config_directories.outputs.docker_images }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+      - id: find-folders
+        uses: SuperEvilMegacorp/list-folders-action@5f9fce10cea7c4e4f094e6638e7209865af5501e
+        with:
+          path: ${{ github.workspace }}
+      - name: "Filter out config directories"
+        id: filter_config_directories
+        run: |
+          DOCKER_IMAGES=$(echo "${{ steps.find-folders.outputs.folders }}" | jq -c '[.[] | select(. |  contains(".") | not)'])
+          echo "docker_images=$DOCKER_IMAGES" >> "$GITHUB_OUTPUT"

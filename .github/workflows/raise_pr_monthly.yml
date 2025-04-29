@@ -1,0 +1,70 @@
+name: Raise PR for Monthly Version Bump
+
+on:
+  schedule:
+    - cron: '0 9 1 * *' # Run at midnight each Sunday
+  workflow_dispatch: { }
+
+jobs:
+  find-all-docker-images:
+    uses: ./.github/workflows/find_all_docker_images.yml
+  create-new-config-yamls:
+    name: "Calculate and Store New config.yaml"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    needs: find-all-docker-images
+    strategy:
+      matrix:
+        image_directory: ${{ fromJSON(needs.find-all-docker-images.outputs.docker_images ) }}
+    steps:
+      - name: "Checkout Repo"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Extract Details From config.yml
+        id: extract_from_config_yaml
+        uses: ./.github/workflows/extract_details_from_config.yml
+        with:
+          config_yaml_path: ${{ github.workspace }}/${{ matrix.changed_dir }}/config.yaml
+      - name: Bump Minor Version
+        id: bump
+        uses: cbrgm/semver-bump-action@main
+        with:
+          current-version: ${{ steps.extract_from_config_yaml.outputs.current_version }}
+          bump-level: patch
+      - name: "Calculate version to bump to"
+        id: calculate-version
+        run: |
+          yq w ${{ github.workspace }}/${{ matrix.image_directory }}/config.yml .version ${{ steps.bump.outputs.new_version }} >> ${{ github.workspace }}/${{ matrix.image_directory }}_config.yml
+      - name: "Store saved config.yaml"
+        uses: actions/upload-artifact@6027e3dd177782cd8ab9af838c04fd81a07f1d47
+        with:
+          name: new-version_${{ matrix.image_directory }}/config.yml
+          path: ${{ github.workspace }}/${{ matrix.image_directory }}_config.yml
+
+  raise_pull_request:
+    name: "Raise Pull Request"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repo"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Get current date
+        id: get-date
+        run: echo "date=$(date +'%Y%m%d%')" >> $GITHUB_OUTPUT
+      - name: Download new config YAMLs
+        id: download-new-config-yamls
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e
+        with:
+          pattern: new-version_*
+      - name: Move the configs to their new location
+        run: |
+          apt-get update
+          apt-get install -y mmv
+          mmv *_config.yaml '${{ github.workspace }}/#1/config.yaml'
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
+        with:
+          commit-message: 'Update Patch Versions For All Images - ${{ steps.get-date.outputs.date }}'
+          branch: update-patch-versions
+          title: 'Update Patch Versions For All Images - ${{ steps.get-date.outputs.date }}'
+          body: Automated PR to bump patch versions for all images, to ensure they don't get stale

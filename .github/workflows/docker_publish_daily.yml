@@ -1,0 +1,65 @@
+name: Build & Publish Docker Images - Daily
+
+on:
+  schedule:
+    - cron: "0 10 * * *" # Run this job every day at 10am to get a daily build
+  workflow_dispatch: { }
+
+env:
+  REGISTRY: ghcr.io
+  NAMESPACED_REGISTRY: ghcr.io/apollographql/ci-utility-docker-images
+
+jobs:
+  find-all-docker-images:
+    uses: ./.github/workflows/find_all_docker_images.yml
+  build-and-push-images:
+    name: Build and Push Docker Image
+    needs: find-all-docker-images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      attestations: write
+      id-token: write
+    strategy:
+      matrix:
+        image_directory: ${{ fromJSON(needs.find-all-docker-images.outputs.docker_images) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+      - name: Get current date
+        id: get-date
+        run: echo "date=$(date +'%Y%m%d%H%M')" >> $GITHUB_OUTPUT
+      - name: Log in to the Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract Details From config.yml
+        id: extract_from_config_yaml
+        uses: ./.github/workflows/extract_details_from_config.yml
+        with:
+          config_yaml_path: ${{ github.workspace }}/${{ matrix.image_directory }}/config.yaml
+      - name: Build Docker Image
+        uses: ./.github/workflows/build_docker_image.yml
+        with:
+          description: ${{ steps.extract_from_config_yaml.outputs.description }}
+          directory: ${{ github.workspace }}/${{ matrix.image_directory }}
+          image_name: ${{ matrix.image_directory }}
+          image_registry: ${{ env.NAMESPACED_REGISTRY }}
+          platforms: ${{ steps.extract_from_config_yaml.outputs.platforms }}
+          tags: |
+            type=semver,pattern={{version}},value=v${{ steps.extract_from_config_yaml.outputs.current_version }}-${{ steps.get-date.outputs.date }}
+
+  check-builds-all-completes:
+    name: Docker Images Built & Pushed
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    needs:
+      - build-and-push-images
+    steps:
+      - run: |
+          exit ${{ (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && 1 || 0 }}
+
+
