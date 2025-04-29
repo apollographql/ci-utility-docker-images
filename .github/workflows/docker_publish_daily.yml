@@ -38,19 +38,22 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract Details From config.yml
         id: extract_from_config_yaml
-        uses: ./.github/workflows/extract_details_from_config.yml
+        uses: ./.github/actions/extract_details_from_config
         with:
-          config_yaml_path: ${{ github.workspace }}/${{ matrix.image_directory }}/config.yaml
+          config_yaml_path: ${{ github.workspace }}/${{ matrix.image_directory }}/config.yml
       - name: Build Docker Image
-        uses: ./.github/workflows/build_docker_image.yml
+        uses: ./.github/actions/build_docker_image
         with:
-          description: ${{ steps.extract_from_config_yaml.outputs.description }}
+          image_description: ${{ steps.extract_from_config_yaml.outputs.description }}
           directory: ${{ github.workspace }}/${{ matrix.image_directory }}
           image_name: ${{ matrix.image_directory }}
-          image_registry: ${{ env.NAMESPACED_REGISTRY }}
+          namespaced_image_registry: ${{ env.NAMESPACED_REGISTRY }}
+          image_registry: ${{ env.REGISTRY }}
           platforms: ${{ steps.extract_from_config_yaml.outputs.platforms }}
           tags: |
             type=semver,pattern={{version}},value=v${{ steps.extract_from_config_yaml.outputs.current_version }}-${{ steps.get-date.outputs.date }}
+          image_registry_password: ${{ secrets.GITHUB_TOKEN }}
+          image_registry_username: ${{ github.actor }}
 
   check-builds-all-completes:
     name: Docker Images Built & Pushed

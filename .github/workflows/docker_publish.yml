@@ -46,17 +46,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
-      - name: Log in to the Container Registry
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract Details From config.yml
         id: extract_from_config_yaml
-        uses: ./.github/workflows/extract_details_from_config.yml
+        uses: ./.github/actions/extract_details_from_config
         with:
-          config_yaml_path: ${{ github.workspace }}/${{ matrix.changed_dir }}/config.yaml
+          config_yaml_path: ${{ github.workspace }}/${{ matrix.changed_dir }}/config.yml
       - name: Check Image to Build Does Not Already Exist
         run: |
           if docker manifest inspect ${{ env.NAMESPACED_REGISTRY }}/${{ matrix.changed_dir }}:${{ steps.extract_from_config_yaml.outputs.current_version }} > /dev/null; then
@@ -69,16 +63,19 @@ jobs:
           VERSION=${{ github.event_name == 'pull_request' && format('{0}-PR{1}.{2}', steps.extract_from_config_yaml.outputs.current_version, github.event.number, github.event.pull_request.head.sha) || steps.extract_from_config_yaml.outputs.current_version}}
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - name: Build Docker Image (${{ matrix.changed_dir }})
-        uses: ./.github/workflows/build_docker_image.yml
+        uses: ./.github/actions/build_docker_image
         with:
-          description: ${{ steps.extract_from_config_yaml.outputs.description }}
+          image_description: ${{ steps.extract_from_config_yaml.outputs.description }}
           directory: ${{ github.workspace }}/${{ matrix.changed_dir }}
           image_name: ${{ matrix.changed_dir }}
-          image_registry: ${{ env.NAMESPACED_REGISTRY }}
+          namespaced_image_registry: ${{ env.NAMESPACED_REGISTRY }}
+          image_registry: ${{ env.REGISTRY }}
           platforms: ${{ steps.extract_from_config_yaml.outputs.platforms }}
           tags: |
-            type=semver,pattern={{version}},value=v${{ inputs.version }}
+            type=semver,pattern={{version}},value=v${{ steps.calculate_version.outputs.version }}
             type=sha,prefix=
+          image_registry_password: ${{ secrets.GITHUB_TOKEN }}
+          image_registry_username: ${{ github.actor }}
       - name: Create Git Tag
         uses: mathieudutour/github-tag-action@a22cf08638b34d5badda920f9daf6e72c477b07b
         with:
