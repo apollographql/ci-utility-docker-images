@@ -1,0 +1,18 @@
+name: "Find All Docker Images In Repo"
+description: "Find all the directories that represent Docker Images to build within the repo"
+outputs:
+  docker_images:
+    description: "List of all the directories of Docker Images that need to be built"
+    value: ${{ steps.find_correct_directories.outputs.docker_images }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+    - name: "Find correct directories"
+      id: find_correct_directories
+      run: |
+        DOCKER_IMAGES=$(tree -J -d -L 1 ${{ github.workspace }} | jq -c '[.[0].contents[].name]')
+        echo "docker_images=$DOCKER_IMAGES" >> "$GITHUB_OUTPUT"
+      shell: bash
