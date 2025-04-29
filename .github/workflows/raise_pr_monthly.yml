@@ -47,7 +47,7 @@ jobs:
       - name: "Store saved config.yml"
         uses: actions/upload-artifact@6027e3dd177782cd8ab9af838c04fd81a07f1d47
         with:
-          name: new-version_${{ matrix.image_directory }}/config.yml
+          name: new-version_${{ matrix.image_directory }}_config.yml
           path: ${{ github.workspace }}/${{ matrix.image_directory }}_config.yml
 
   raise_pull_request:
@@ -68,9 +68,9 @@ jobs:
           pattern: new-version_*
       - name: Move the configs to their new location
         run: |
-          apt-get update
-          apt-get install -y mmv
-          mmv *_config.yml '${{ github.workspace }}/#1/config.yml'
+          sudo apt-get update
+          sudo apt-get install -y mmv
+          mmv -dx 'new-version_*_config.yml' '${{ github.workspace }}/#1/config.yml'
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
         with:
