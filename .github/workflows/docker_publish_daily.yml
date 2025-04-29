@@ -11,7 +11,15 @@ env:
 
 jobs:
   find-all-docker-images:
-    uses: ./.github/workflows/find_all_docker_images.yml
+    name: "Find All Docker Images To Build"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+      - id: find-all-docker-images
+        uses: ./.github/actions/find_all_docker_images
+    outputs:
+      docker_images: ${{ steps.find-all-docker-images.outputs.docker_images }}
   build-and-push-images:
     name: Build and Push Docker Image
     needs: find-all-docker-images

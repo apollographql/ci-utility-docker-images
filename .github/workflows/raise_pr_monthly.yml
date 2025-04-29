@@ -7,7 +7,12 @@ on:
 
 jobs:
   find-all-docker-images:
-    uses: ./.github/workflows/find_all_docker_images.yml
+    runs-on: ubuntu-latest
+    steps:
+      - id: find-all-docker-images
+        uses: ./.github/actions/find_all_docker_images
+    outputs:
+      docker_images: ${{ steps.find-all-docker-images.outputs.docker_images }}
   create-new-config-yamls:
     name: "Calculate and Store New config.yml"
     runs-on: ubuntu-latest
