@@ -1,8 +1,10 @@
-# Binary Builder (`musl`)
+# Apollo Rust Build (`musl`)
 
 The image contained herein is an image that should be used
-to _build_ Rust binaries at Apollo.
+to _build_ Rust binaries at Apollo, where `musl` rather `glibc` is needed.
 
-It contains Alpine 3.19, and Rust at version 1.80.1 and is based on the published rust images.
+It's based on the `rust-1:alpine` image and so will move as that image moves.
 
-Using images like this ensures compliance with our new standards for Rust binary building.
+Using images like this ensures compatability with the broadest
+range of Linux distributions that are currently under an LTS policy,
+and ensures compliance with our new standards for Rust binary building.
