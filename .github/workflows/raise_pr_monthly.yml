@@ -72,7 +72,7 @@ jobs:
           sudo apt-get install -y mmv
           mmv -dx 'new-version_*_config.yml' '${{ github.workspace }}/#1/config.yml'
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
+        uses: peter-evans/create-pull-request@9b309f7eaa24cdc404c6e9e169d35ac06ca3671e
         with:
           commit-message: 'Update Patch Versions For All Images - ${{ steps.get-date.outputs.date }}'
           branch: update-patch-versions
