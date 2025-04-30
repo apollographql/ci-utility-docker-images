@@ -15,6 +15,15 @@
         "major"
       ],
       "enabled": false
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "digest": {
+        "groupName": "GitHub Actions Digests",
+        "groupSlug": "gha-digests",
+      }
     }
   ],
   // Allow ourselves to specify bits in Docker Images that should be updated by Renovate as well
