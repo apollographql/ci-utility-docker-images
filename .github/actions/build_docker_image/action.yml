@@ -45,7 +45,7 @@ runs:
         username: ${{ inputs.image_registry_username }}
         password: ${{ inputs.image_registry_password }}
     - name: Set up Docker
-      uses: docker/setup-docker-action@b60f85385d03ac8acfca6d9996982511d8620a19
+      uses: docker/setup-docker-action@7db77378a91933464680e1dcf10e084da86576f2
       with:
         daemon-config: |
           {
