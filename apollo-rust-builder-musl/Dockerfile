@@ -19,7 +19,7 @@ RUN apk update && apk upgrade
 
 # Add tools to enable `musl` compilation and other utilities when building in Rust
 RUN apk add musl-dev curl cmake openssl gcc perl cmake git make openssh-client ca-certificates sudo \
-    jq g++ elfutils docker
+    jq g++ elfutils docker python3
 
 # Add the specific `musl` target to make sure we don't build for `glibc` by accident
 RUN case $TARGETPLATFORM in \
