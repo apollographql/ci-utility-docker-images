@@ -8,7 +8,7 @@ ARG RUST_VERSION=1.86.0
 ARG YQ_VERSION=4.45.1
 # renovate: datasource=github-releases depName=volta-cli/volta extractVersion=^v(?<version>.*)$
 ARG VOLTA_VERSION=2.0.2
-# Don't set this to bump automatically as it should move as the version does that's bundled with Alpine
+# renovate: datasource=github-releases depName=nodejs/node extractVersion=^v(?<version>.*)$
 ARG NODE_VERSION=20.15.1
 ARG TARGETPLATFORM
 
