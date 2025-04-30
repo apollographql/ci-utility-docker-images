@@ -7,9 +7,17 @@ on:
 
 jobs:
   find-all-docker-images:
-    uses: ./.github/workflows/find_all_docker_images.yml
+    name: "Find all Docker Images"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+      - id: find-all-docker-images
+        uses: ./.github/actions/find_all_docker_images
+    outputs:
+      docker_images: ${{ steps.find-all-docker-images.outputs.docker_images }}
   create-new-config-yamls:
-    name: "Calculate and Store New config.yaml"
+    name: "Calculate and Store New config.yml"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -23,9 +31,9 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Extract Details From config.yml
         id: extract_from_config_yaml
-        uses: ./.github/workflows/extract_details_from_config.yml
+        uses: ./.github/actions/extract_details_from_config
         with:
-          config_yaml_path: ${{ github.workspace }}/${{ matrix.changed_dir }}/config.yaml
+          config_yaml_path: ${{ github.workspace }}/${{ matrix.image_directory }}/config.yml
       - name: Bump Minor Version
         id: bump
         uses: cbrgm/semver-bump-action@main
@@ -35,22 +43,24 @@ jobs:
       - name: "Calculate version to bump to"
         id: calculate-version
         run: |
-          yq w ${{ github.workspace }}/${{ matrix.image_directory }}/config.yml .version ${{ steps.bump.outputs.new_version }} >> ${{ github.workspace }}/${{ matrix.image_directory }}_config.yml
-      - name: "Store saved config.yaml"
+          yq '.version = "${{ steps.bump.outputs.new_version }}"' ${{ github.workspace }}/${{ matrix.image_directory }}/config.yml > ${{ github.workspace }}/${{ matrix.image_directory }}_config.yml
+      - name: "Store saved config.yml"
         uses: actions/upload-artifact@6027e3dd177782cd8ab9af838c04fd81a07f1d47
         with:
-          name: new-version_${{ matrix.image_directory }}/config.yml
+          name: new-version_${{ matrix.image_directory }}_config.yml
           path: ${{ github.workspace }}/${{ matrix.image_directory }}_config.yml
 
   raise_pull_request:
     name: "Raise Pull Request"
     runs-on: ubuntu-latest
+    needs:
+      - create-new-config-yamls
     steps:
       - name: "Checkout Repo"
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Get current date
         id: get-date
-        run: echo "date=$(date +'%Y%m%d%')" >> $GITHUB_OUTPUT
+        run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
       - name: Download new config YAMLs
         id: download-new-config-yamls
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e
@@ -58,9 +68,9 @@ jobs:
           pattern: new-version_*
       - name: Move the configs to their new location
         run: |
-          apt-get update
-          apt-get install -y mmv
-          mmv *_config.yaml '${{ github.workspace }}/#1/config.yaml'
+          sudo apt-get update
+          sudo apt-get install -y mmv
+          mmv -dx 'new-version_*_config.yml' '${{ github.workspace }}/#1/config.yml'
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
         with:

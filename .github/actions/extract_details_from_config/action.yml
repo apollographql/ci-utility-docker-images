@@ -1,0 +1,27 @@
+name: "Extract Details From Config YAML File"
+description: "In this repo we use config.yml files to describe details about the images, this action extracts details from them"
+inputs:
+  config_yaml_path:
+    required: true
+    description: "The path to the config.yml file in the repo"
+outputs:
+  current_version:
+    description: "The current value of the 'version' field in the file"
+    value: ${{ steps.extract_from_config_yaml.outputs.current_version }}
+  platforms:
+    description: "A comma separated list of the Docker Platforms that this image should be built for"
+    value: ${{ steps.extract_from_config_yaml.outputs.platforms }}
+  description:
+    description: "The Description to include in the OCI annotations of the built image"
+    value: ${{ steps.extract_from_config_yaml.outputs.description }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Extract Details From config.yml
+      id: extract_from_config_yaml
+      run: |
+        echo "current_version=$(cat ${{ inputs.config_yaml_path }} | yq '.version')" >> "$GITHUB_OUTPUT"
+        echo "platforms=$(cat ${{ inputs.config_yaml_path }} | yq '.platforms | join(",")')" >> "$GITHUB_OUTPUT"
+        echo "description=$(cat ${{ inputs.config_yaml_path }} | yq '.description')" >> "$GITHUB_OUTPUT"
+      shell: bash
