@@ -28,6 +28,12 @@ inputs:
   platforms:
     description: "A comma separated list of the platforms to build for"
     required: true
+  wiz_client_id:
+    description: "Client ID associated with the Wiz Container Scanning Tool We Use"
+    required: true
+  wiz_client_secret:
+    description: "Secret associated with the Wiz Container Scanning Tool We Use"
+    required: true
 
 runs:
   using: composite
@@ -38,6 +44,15 @@ runs:
         registry: ${{ inputs.image_registry }}
         username: ${{ inputs.image_registry_username }}
         password: ${{ inputs.image_registry_password }}
+    - name: Set up Docker
+      uses: docker/setup-docker-action@b60f85385d03ac8acfca6d9996982511d8620a19
+      with:
+        daemon-config: |
+          {
+            "features": {
+              "containerd-snapshotter": true
+            }
+          }
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@941183f0a080fa6be59a9e3d3f4108c19a528204
     - name: Get Docker Metadata
@@ -58,6 +73,47 @@ runs:
           org.opencontainers.image.description=${{ inputs.description }}
           org.opencontainers.image.vendor=Apollo GraphQL
           org.opencontainers.image.licenses=MIT
+    - name: Build and Load Docker Image For Testing
+      id: build-for-testing
+      uses: docker/build-push-action@67dc78bbaf388b3265f7e1c880e681f4b90d5f48
+      with:
+        context: ${{ inputs.directory }}
+        file: ${{ inputs.directory }}/Dockerfile
+        load: true
+        tags: ${{ inputs.image_name }}:test
+        platforms: ${{ inputs.platforms }}
+    - name: Install Wiz CLI
+      shell: bash
+      working-directory: ${{ runner.temp }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install gpg
+        curl -Lo wizcli https://downloads.wiz.io/wizcli/latest/wizcli-linux-amd64
+        curl -Lo wizcli-sha256 https://downloads.wiz.io/wizcli/latest/wizcli-linux-amd64-sha256
+        curl -Lo wizcli-sha256.sig https://downloads.wiz.io/wizcli/latest/wizcli-linux-amd64-sha256.sig
+        curl -Lo wiz_public_key.asc https://downloads.wiz.io/wizcli/public_key.asc
+        gpg --import wiz_public_key.asc
+        gpg --verify wizcli-sha256.sig wizcli-sha256
+        echo "$(cat wizcli-sha256) wizcli" | sha256sum --check
+        chmod +x wizcli
+    - name: Authenticate Wiz CLI
+      shell: bash
+      working-directory: ${{ runner.temp }}
+      run: |
+        ./wizcli auth --id ${{ inputs.wiz_client_id }} --secret ${{ inputs.wiz_client_secret }}
+    - name: Scan Image
+      shell: bash
+      working-directory: ${{ runner.temp }}
+      run: |
+        mkdir -p ${{ inputs.image_name }}
+        ./wizcli docker scan \
+          --image ${{ inputs.image_name }}:test \
+          --dockerfile ${{ inputs.directory }}/Dockerfile \
+          --policy "Apollo-Default-Vulnerabilities-Policy" \
+          --sbom-format spdx-json \
+          --sbom-output-file ${{ inputs.image_name }}/sbom.json \
+          --timeout "0h9m0s" \
+          --sensitive-data
     - name: Build and Push Docker image
       id: push
       uses: docker/build-push-action@67dc78bbaf388b3265f7e1c880e681f4b90d5f48

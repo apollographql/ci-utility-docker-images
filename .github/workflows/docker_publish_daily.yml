@@ -62,6 +62,8 @@ jobs:
             type=semver,pattern={{version}},value=v${{ steps.extract_from_config_yaml.outputs.current_version }}-${{ steps.get-date.outputs.date }}
           image_registry_password: ${{ secrets.GITHUB_TOKEN }}
           image_registry_username: ${{ github.actor }}
+          wiz_client_secret: ${{ secrets.WIZ_CLIENT_SECRET }}
+          wiz_client_id: ${{ secrets.WIZ_CLIENT_ID }}
 
   check-builds-all-completes:
     name: Docker Images Built & Pushed
