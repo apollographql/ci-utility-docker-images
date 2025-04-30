@@ -23,7 +23,7 @@ RUN microdnf upgrade
 RUN microdnf install --nodocs --noplugins yum-utils && \
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
     microdnf install --nodocs --noplugins perl-core openssl-devel cmake git make openssh-clients ca-certificates sudo  \
-          unzip jq wget gcc gcc-c++ elfutils-devel docker-ce docker-ce-cli containerd.io && \
+          unzip jq wget gcc gcc-c++ elfutils-devel docker-ce docker-ce-cli containerd.io python312 && \
     microdnf clean all && \
     rm -rf /var/cache/yum
 
