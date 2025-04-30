@@ -23,7 +23,6 @@
       "digest": {
         "groupName": "GitHub Actions Digests",
         "groupSlug": "gha-digests",
-        "automerge": true
       }
     }
   ],
