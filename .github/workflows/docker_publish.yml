@@ -76,6 +76,8 @@ jobs:
             type=sha,prefix=
           image_registry_password: ${{ secrets.GITHUB_TOKEN }}
           image_registry_username: ${{ github.actor }}
+          wiz_client_secret: ${{ secrets.WIZ_CLIENT_SECRET }}
+          wiz_client_id: ${{ secrets.WIZ_CLIENT_ID }}
       - name: Create Git Tag
         uses: mathieudutour/github-tag-action@a22cf08638b34d5badda920f9daf6e72c477b07b
         with:
