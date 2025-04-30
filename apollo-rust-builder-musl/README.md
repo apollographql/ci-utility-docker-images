@@ -1,4 +1,4 @@
-# Apollo Rust Build (`musl`)
+# Apollo Rust Builder (`musl`)
 
 The image contained herein is an image that should be used
 to _build_ Rust binaries at Apollo, where `musl` rather `glibc` is needed.
