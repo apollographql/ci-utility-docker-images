@@ -75,7 +75,7 @@ runs:
           org.opencontainers.image.licenses=MIT
     - name: Build and Load Docker Image For Testing
       id: build-for-testing
-      uses: docker/build-push-action@67dc78bbaf388b3265f7e1c880e681f4b90d5f48
+      uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1
       with:
         context: ${{ inputs.directory }}
         file: ${{ inputs.directory }}/Dockerfile
@@ -116,7 +116,7 @@ runs:
           --sensitive-data
     - name: Build and Push Docker image
       id: push
-      uses: docker/build-push-action@67dc78bbaf388b3265f7e1c880e681f4b90d5f48
+      uses: docker/build-push-action@14487ce63c7a62a4a324b0bfb37086795e31c6c1
       with:
         context: ${{ inputs.directory }}
         file: ${{ inputs.directory }}/Dockerfile
