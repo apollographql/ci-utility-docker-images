@@ -27,7 +27,7 @@ jobs:
       - name: "Filter out config directories"
         id: filter_config_directories
         run: |
-          CHANGED_DIRS=$(echo "${{ steps.calculate_changed_files.outputs.all_changed_files }}" | jq -c '[.[] | select(. |  contains(".") | not)'])
+          CHANGED_DIRS=$(echo "${{ steps.calculate_changed_files.outputs.all_changed_files }}" | jq -c '[.[] | select(. | startswith(".") | not)'])
           echo "changed_dirs=$CHANGED_DIRS" >> "$GITHUB_OUTPUT"
   build-and-push-images:
     name: Build and Push Docker Image
