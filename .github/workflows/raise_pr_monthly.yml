@@ -65,12 +65,15 @@ jobs:
         id: download-new-config-yamls
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
+          path: .config_yamls
           pattern: new-version_*
+          merge-multiple: true
       - name: Move the configs to their new location
         run: |
           sudo apt-get update
           sudo apt-get install -y mmv
-          mmv -dx 'new-version_*_config.yml' '${{ github.workspace }}/#1/config.yml'
+          mmv -dx '.config_yamls/new-version_*_config.yml' '${{ github.workspace }}/#1/config.yml'
+          rm -rf .config_yamls
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@9b309f7eaa24cdc404c6e9e169d35ac06ca3671e
         with:
