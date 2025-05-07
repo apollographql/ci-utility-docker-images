@@ -75,7 +75,7 @@ jobs:
           mmv -dhx '${{ github.workspace }}/.config_yamls/*_config.yml' '${{ github.workspace }}/#1/config.yml'
           rm -rf .config_yamls
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@9b309f7eaa24cdc404c6e9e169d35ac06ca3671e
+        uses: peter-evans/create-pull-request@889dce9eaba7900ce30494f5e1ac7220b27e5c81
         with:
           commit-message: 'Update Patch Versions For All Images - ${{ steps.get-date.outputs.date }}'
           branch: update-patch-versions
