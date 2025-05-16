@@ -5,7 +5,7 @@ FROM node:${NODE_VERSION}-alpine AS node
 
 # Fixing to a specific SHA rather than a mutable tag, stops rebuilds completely
 # changing the contents of the container without us realising.
-FROM rust:1-alpine@sha256:661d708cc863ce32007cf46807a72062a80d2944a6fae9e0d83742d2e04d5375
+FROM rust:1-alpine@sha256:fa7c28576553c431224a85c897c38f3a6443bd831be37061ab3560d9e797dc82
 
 ARG TARGETPLATFORM
 
