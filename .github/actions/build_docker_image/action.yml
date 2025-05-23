@@ -54,7 +54,7 @@ runs:
             }
           }
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@e600775e527acba2317260cadb64b7e19efd5362
+      uses: docker/setup-buildx-action@3f1544eb9eff0b4d4d279b33f704a06fcf8d0e43
     - name: Get Docker Metadata
       id: meta
       uses: docker/metadata-action@418e4b98bf2841bd337d0b24fe63cb36dc8afa55
