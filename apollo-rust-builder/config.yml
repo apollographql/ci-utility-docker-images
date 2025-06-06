@@ -1,4 +1,4 @@
-version: 0.11.1
+version: 0.11.2
 description: Builder image for Rust binaries
 platforms:
   - linux/arm64
