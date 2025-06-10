@@ -1,43 +1,43 @@
 {
   extends: [
-    'github>apollographql/renovate-config-apollo-open-source:default.json5'
+    'github>apollographql/renovate-config-apollo-open-source:default.json5',
   ],
   minimumReleaseAge: '3 days',
   packageRules: [
     {
       matchFileNames: [
-        '(^|\\\/)Dockerfile$',
-        '(^|\\\/)Dockerfile\\\\.[^\/]*$'
+        '/(^|/)Dockerfile$/',
+        '/(^|/)Dockerfile\\.[^/]*$/'
       ],
       matchUpdateTypes: [
-        'major'
+        'major',
       ],
-      enabled: false
+      enabled: false,
     },
     {
       matchManagers: [
-        'github-actions'
+        'github-actions',
       ],
       digest: {
         groupName: 'GitHub Actions Digests',
-        groupSlug: 'gha-digests'
-      }
-    }
+        groupSlug: 'gha-digests',
+      },
+    },
   ],
   customManagers: [
     {
       customType: 'regex',
       managerFilePatterns: [
-        '(^|\\\/)Dockerfile$',
-        '(^|\\\/)Dockerfile\\\\.[^\/]*$'
+        '/(^|/)Dockerfile$/',
+        '/(^|/)Dockerfile\\.[^/]*$/',
       ],
       matchStrings: [
-        '# renovate: datasource=(?<datasource>[a-z-]+?)(?: depName=(?<depName>.+?))?(?: extractVersion=(?<extractVersion>.*))?(?:^|\\r\\n|\\r|\\n|$)(?:ENV|ARG) .+?_VERSION=(?<currentValue>.+?)(?:^|\\r\\n|\\r|\\n|$)'
-      ]
-    }
+        '# renovate: datasource=(?<datasource>[a-z-]+?)(?: depName=(?<depName>.+?))?(?: extractVersion=(?<extractVersion>.*))?(?:^|\\r\\n|\\r|\\n|$)(?:ENV|ARG) .+?_VERSION=(?<currentValue>.+?)(?:^|\\r\\n|\\r|\\n|$)',
+      ],
+    },
   ],
   schedule: [
-    '* * * * * *'
+    '* * * * * *',
   ],
-  updateNotScheduled: true
+  updateNotScheduled: true,
 }
