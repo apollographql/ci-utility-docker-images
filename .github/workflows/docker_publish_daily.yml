@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+        uses: actions/checkout@09d2acae674a48949e3602304ab46fd20ae0c42f
       - id: find-all-docker-images
         uses: ./.github/actions/find_all_docker_images
     outputs:
@@ -34,7 +34,7 @@ jobs:
         image_directory: ${{ fromJSON(needs.find-all-docker-images.outputs.docker_images) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+        uses: actions/checkout@09d2acae674a48949e3602304ab46fd20ae0c42f
       - name: Get current date
         id: get-date
         run: echo "date=$(date +'%Y%m%d%H%M')" >> $GITHUB_OUTPUT

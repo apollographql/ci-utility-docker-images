@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+        uses: actions/checkout@09d2acae674a48949e3602304ab46fd20ae0c42f
       - id: find-all-docker-images
         uses: ./.github/actions/find_all_docker_images
     outputs:
@@ -28,7 +28,7 @@ jobs:
         image_directory: ${{ fromJSON(needs.find-all-docker-images.outputs.docker_images ) }}
     steps:
       - name: "Checkout Repo"
-        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+        uses: actions/checkout@09d2acae674a48949e3602304ab46fd20ae0c42f
       - name: Extract Details From config.yml
         id: extract_from_config_yaml
         uses: ./.github/actions/extract_details_from_config
@@ -57,7 +57,7 @@ jobs:
       - create-new-config-yamls
     steps:
       - name: "Checkout Repo"
-        uses: actions/checkout@85e6279cec87321a52edac9c87bce653a07cf6c2
+        uses: actions/checkout@09d2acae674a48949e3602304ab46fd20ae0c42f
       - name: Get current date
         id: get-date
         run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
@@ -75,7 +75,7 @@ jobs:
           mmv -dhx '${{ github.workspace }}/.config_yamls/*_config.yml' '${{ github.workspace }}/#1/config.yml'
           rm -rf .config_yamls
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@f689536846d983d7c4f399cd9b789c38c963aaca
+        uses: peter-evans/create-pull-request@0f2a09222f84e1d0d078fdec150cbe3ff4c5b799
         with:
           commit-message: 'Update Patch Versions For All Images - ${{ steps.get-date.outputs.date }}'
           branch: update-patch-versions
