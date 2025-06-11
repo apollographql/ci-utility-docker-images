@@ -79,14 +79,12 @@ jobs:
           wiz_client_secret: ${{ secrets.WIZ_CLIENT_SECRET }}
           wiz_client_id: ${{ secrets.WIZ_CLIENT_ID }}
       - name: Create Git Tag
-        uses: mathieudutour/github-tag-action@a22cf08638b34d5badda920f9daf6e72c477b07b
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          default_bump: false
-          default_prerelease_bump: false
-          custom_tag: ${{ matrix.changed_dir }}/v${{ steps.calculate_version.outputs.version }}
-          dry_run: ${{ github.event_name == 'pull_request' }}
-          tag_prefix: ""
+        uses: anothrNick/github-tag-action@e528bc2b9628971ce0e6f823f3052d1dcd9d512c
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: none
+          CUSTOM_TAG: ${{ matrix.changed_dir }}/v${{ steps.calculate_version.outputs.version }}
+          DRY_RUN: ${{ github.event_name == 'pull_request' }}
       - name: Create GitHub Release
         if: ${{ github.event_name != 'pull_request' }}
         uses: comnoco/create-release-action@6ac85b5a67d93e181c1a8f97072e2e3ffc582ec4
