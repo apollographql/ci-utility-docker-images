@@ -39,13 +39,13 @@ runs:
   using: composite
   steps:
     - name: Log in to the Container Registry
-      uses: docker/login-action@6d4b68b490aef8836e8fb5e50ee7b3bdfa5894f0
+      uses: docker/login-action@3d100841f68d4548bf57e52eb27bd33ec5069f55
       with:
         registry: ${{ inputs.image_registry }}
         username: ${{ inputs.image_registry_username }}
         password: ${{ inputs.image_registry_password }}
     - name: Set up Docker
-      uses: docker/setup-docker-action@efe6ba76e30de04f1a84d4aa6ea0d802d73b31b9
+      uses: docker/setup-docker-action@29412e2cf6d24b62f90425ba31a07e5d683a7127
       with:
         daemon-config: |
           {
@@ -54,10 +54,10 @@ runs:
             }
           }
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@3f1544eb9eff0b4d4d279b33f704a06fcf8d0e43
+      uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
     - name: Get Docker Metadata
       id: meta
-      uses: docker/metadata-action@418e4b98bf2841bd337d0b24fe63cb36dc8afa55
+      uses: docker/metadata-action@b798ed8388581f6f002541048b6458ca2c4ba442
       env:
         DOCKER_METADATA_PR_HEAD_SHA: true
       with:

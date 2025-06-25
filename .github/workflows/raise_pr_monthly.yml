@@ -45,7 +45,7 @@ jobs:
         run: |
           yq '.version = "${{ steps.bump.outputs.new_version }}"' ${{ github.workspace }}/${{ matrix.image_directory }}/config.yml > ${{ github.workspace }}/${{ matrix.image_directory }}_config.yml
       - name: "Store saved config.yml"
-        uses: actions/upload-artifact@6027e3dd177782cd8ab9af838c04fd81a07f1d47
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
           name: new-version_${{ matrix.image_directory }}_config.yml
           path: ${{ github.workspace }}/${{ matrix.image_directory }}_config.yml
@@ -63,7 +63,7 @@ jobs:
         run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
       - name: Download new config YAMLs
         id: download-new-config-yamls
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
         with:
           path: .config_yamls
           pattern: new-version_*
@@ -75,7 +75,7 @@ jobs:
           mmv -dhx '${{ github.workspace }}/.config_yamls/*_config.yml' '${{ github.workspace }}/#1/config.yml'
           rm -rf .config_yamls
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@0f2a09222f84e1d0d078fdec150cbe3ff4c5b799
+        uses: peter-evans/create-pull-request@a59c52d55daab9f6a666e8741848b3cf101395a7
         with:
           commit-message: 'Update Patch Versions For All Images - ${{ steps.get-date.outputs.date }}'
           branch: update-patch-versions
