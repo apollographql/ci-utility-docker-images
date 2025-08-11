@@ -63,7 +63,7 @@ jobs:
         run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
       - name: Download new config YAMLs
         id: download-new-config-yamls
-        uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
+        uses: actions/download-artifact@de96f4613b77ec03b5cf633e7c350c32bd3c5660
         with:
           path: .config_yamls
           pattern: new-version_*
@@ -75,7 +75,7 @@ jobs:
           mmv -dhx '${{ github.workspace }}/.config_yamls/*_config.yml' '${{ github.workspace }}/#1/config.yml'
           rm -rf .config_yamls
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@07cbaebb4bfc9c5d7db426ea5a5f585df29dd0a0
+        uses: peter-evans/create-pull-request@1310d7dab503600742045e6fd4b84dda64352858
         with:
           commit-message: 'Update Patch Versions For All Images - ${{ steps.get-date.outputs.date }}'
           branch: update-patch-versions
