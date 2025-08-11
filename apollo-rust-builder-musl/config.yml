@@ -1,4 +1,4 @@
-version: 0.12.0
+version: 0.12.1
 description: Builder image for Rust binaries that must be built & linked with musl
 platforms:
   - linux/arm64
