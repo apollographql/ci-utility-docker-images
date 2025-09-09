@@ -39,7 +39,7 @@ runs:
   using: composite
   steps:
     - name: Log in to the Container Registry
-      uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1
+      uses: docker/login-action@bdf14dc17331d6af6f3653e7ca655ee4a136baa5
       with:
         registry: ${{ inputs.image_registry }}
         username: ${{ inputs.image_registry_username }}
@@ -75,7 +75,7 @@ runs:
           org.opencontainers.image.licenses=MIT
     - name: Build and Load Docker Image For Testing
       id: build-for-testing
-      uses: docker/build-push-action@ccc2b40e9ea6518f9252a22a990f8e868370f62e
+      uses: docker/build-push-action@cb8fc7586f9ad9441b20c33e0f6e8b1b58d8b4c6
       with:
         context: ${{ inputs.directory }}
         file: ${{ inputs.directory }}/Dockerfile
@@ -116,7 +116,7 @@ runs:
           --sensitive-data
     - name: Build and Push Docker image
       id: push
-      uses: docker/build-push-action@ccc2b40e9ea6518f9252a22a990f8e868370f62e
+      uses: docker/build-push-action@cb8fc7586f9ad9441b20c33e0f6e8b1b58d8b4c6
       with:
         context: ${{ inputs.directory }}
         file: ${{ inputs.directory }}/Dockerfile
