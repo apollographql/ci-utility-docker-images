@@ -39,13 +39,13 @@ runs:
   using: composite
   steps:
     - name: Log in to the Container Registry
-      uses: docker/login-action@5b7b28b1cc417bbd34cd8c225a957c9ce9adf7f2
+      uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef
       with:
         registry: ${{ inputs.image_registry }}
         username: ${{ inputs.image_registry_username }}
         password: ${{ inputs.image_registry_password }}
     - name: Set up Docker
-      uses: docker/setup-docker-action@46897a62896535bdd1405daaf3939f80200ea25d
+      uses: docker/setup-docker-action@3fb92d6d9c634363128c8cce4bc3b2826526370a
       with:
         daemon-config: |
           {
@@ -75,7 +75,7 @@ runs:
           org.opencontainers.image.licenses=MIT
     - name: Build and Load Docker Image For Testing
       id: build-for-testing
-      uses: docker/build-push-action@cb8fc7586f9ad9441b20c33e0f6e8b1b58d8b4c6
+      uses: docker/build-push-action@9e436ba9f2d7bcd1d038c8e55d039d37896ddc5d
       with:
         context: ${{ inputs.directory }}
         file: ${{ inputs.directory }}/Dockerfile
@@ -116,7 +116,7 @@ runs:
           --sensitive-data
     - name: Build and Push Docker image
       id: push
-      uses: docker/build-push-action@cb8fc7586f9ad9441b20c33e0f6e8b1b58d8b4c6
+      uses: docker/build-push-action@9e436ba9f2d7bcd1d038c8e55d039d37896ddc5d
       with:
         context: ${{ inputs.directory }}
         file: ${{ inputs.directory }}/Dockerfile
