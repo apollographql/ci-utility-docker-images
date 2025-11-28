@@ -16,10 +16,10 @@ jobs:
       changed_dirs: ${{ steps.filter_config_directories.outputs.changed_dirs }}
     steps:
       - name: "Checkout repository"
-        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        uses: actions/checkout@c2d88d3ecc89a9ef08eebf45d9637801dcee7eb5
       - name: "Calculate changed files directories"
         id: calculate_changed_files
-        uses: tj-actions/changed-files@d03a93c0dbfac6d6dd6a0d8a5e7daff992b07449
+        uses: tj-actions/changed-files@abdd2f68ea150cee8f236d4a9fb4e0f2491abf1b
         with:
           dir_names: true
           dir_names_exclude_current_dir: true
@@ -45,7 +45,7 @@ jobs:
         changed_dir: ${{ fromJSON(needs.calculate-images-to-build.outputs.changed_dirs ) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        uses: actions/checkout@c2d88d3ecc89a9ef08eebf45d9637801dcee7eb5
       - name: Extract Details From config.yml
         id: extract_from_config_yaml
         uses: ./.github/actions/extract_details_from_config

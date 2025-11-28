@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        uses: actions/checkout@c2d88d3ecc89a9ef08eebf45d9637801dcee7eb5
       - id: find-all-docker-images
         uses: ./.github/actions/find_all_docker_images
     outputs:
@@ -28,7 +28,7 @@ jobs:
         image_directory: ${{ fromJSON(needs.find-all-docker-images.outputs.docker_images ) }}
     steps:
       - name: "Checkout Repo"
-        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        uses: actions/checkout@c2d88d3ecc89a9ef08eebf45d9637801dcee7eb5
       - name: Extract Details From config.yml
         id: extract_from_config_yaml
         uses: ./.github/actions/extract_details_from_config
@@ -45,7 +45,7 @@ jobs:
         run: |
           yq '.version = "${{ steps.bump.outputs.new_version }}"' ${{ github.workspace }}/${{ matrix.image_directory }}/config.yml > ${{ github.workspace }}/${{ matrix.image_directory }}_config.yml
       - name: "Store saved config.yml"
-        uses: actions/upload-artifact@2848b2cda0e5190984587ec6bb1f36730ca78d50
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
           name: new-version_${{ matrix.image_directory }}_config.yml
           path: ${{ github.workspace }}/${{ matrix.image_directory }}_config.yml
@@ -57,13 +57,13 @@ jobs:
       - create-new-config-yamls
     steps:
       - name: "Checkout Repo"
-        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
+        uses: actions/checkout@c2d88d3ecc89a9ef08eebf45d9637801dcee7eb5
       - name: Get current date
         id: get-date
         run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
       - name: Download new config YAMLs
         id: download-new-config-yamls
-        uses: actions/download-artifact@4a24838f3d5601fd639834081e118c2995d51e1c
+        uses: actions/download-artifact@f093f21ca4cfa7c75ccbbc2be54da76a0c7e1f05
         with:
           path: .config_yamls
           pattern: new-version_*
@@ -75,7 +75,7 @@ jobs:
           mmv -dhx '${{ github.workspace }}/.config_yamls/*_config.yml' '${{ github.workspace }}/#1/config.yml'
           rm -rf .config_yamls
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@46cdba753c74545733b821043d64bd6925fc4da9
+        uses: peter-evans/create-pull-request@84ae59a2cdc2258d6fa0732dd66352dddae2a412
         with:
           commit-message: 'Update Patch Versions For All Images - ${{ steps.get-date.outputs.date }}'
           branch: update-patch-versions
