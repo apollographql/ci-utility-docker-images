@@ -3,7 +3,7 @@
 FROM rockylinux:8-minimal@sha256:c584db6d77f40a71ab2364b55be18c154b8e92ba48189e2d82ba0aef64ffee32
 
 # renovate: datasource=github-releases depName=rust-lang/rust
-ARG RUST_VERSION=1.90.0
+ARG RUST_VERSION=1.91.1
 # renovate: datasource=github-releases depName=mikefarah/yq extractVersion=^v(?<version>.*)$
 ARG YQ_VERSION=4.48.1
 # renovate: datasource=github-releases depName=volta-cli/volta extractVersion=^v(?<version>.*)$
