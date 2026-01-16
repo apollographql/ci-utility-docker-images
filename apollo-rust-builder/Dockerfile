@@ -9,7 +9,7 @@ ARG YQ_VERSION=4.50.1
 # renovate: datasource=github-releases depName=volta-cli/volta extractVersion=^v(?<version>.*)$
 ARG VOLTA_VERSION=2.0.2
 # renovate: datasource=github-releases depName=nodejs/node extractVersion=^v(?<version>.*)$
-ARG NODE_VERSION=20.19.6
+ARG NODE_VERSION=20.20.0
 ARG TARGETPLATFORM
 
 # Set Cargo and Volta environment variables
