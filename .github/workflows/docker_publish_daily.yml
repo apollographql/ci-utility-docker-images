@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@c2d88d3ecc89a9ef08eebf45d9637801dcee7eb5
       - id: find-all-docker-images
-        uses: ./.github/actions/find_all_docker_images
+        run: ./.github/scripts/find_all_docker_images.sh "${{ github.workspace }}"
     outputs:
       docker_images: ${{ steps.find-all-docker-images.outputs.docker_images }}
   build-and-push-images:
@@ -35,6 +35,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@c2d88d3ecc89a9ef08eebf45d9637801dcee7eb5
+        with:
+          fetch-tags: true
       - name: Get current date
         id: get-date
         run: echo "date=$(date +'%Y%m%d%H%M')" >> $GITHUB_OUTPUT
@@ -46,9 +48,10 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract Details From config.yml
         id: extract_from_config_yaml
-        uses: ./.github/actions/extract_details_from_config
-        with:
-          config_yaml_path: ${{ github.workspace }}/${{ matrix.image_directory }}/config.yml
+        run: ./.github/scripts/extract_details_from_config.sh "${{ github.workspace }}/${{ matrix.image_directory }}/config.yml"
+      - name: Get Current Version
+        id: get_next_version
+        run: ./.github/scripts/get_next_version.sh "${{ matrix.image_directory }}"
       - name: Build Docker Image
         uses: ./.github/actions/build_docker_image
         with:
@@ -59,7 +62,7 @@ jobs:
           image_registry: ${{ env.REGISTRY }}
           platforms: ${{ steps.extract_from_config_yaml.outputs.platforms }}
           tags: |
-            type=semver,pattern={{version}},value=v${{ steps.extract_from_config_yaml.outputs.current_version }}-${{ steps.get-date.outputs.date }}
+            type=semver,pattern={{version}},value=v${{ steps.get_next_version.outputs.current_version }}-${{ steps.get-date.outputs.date }}
           image_registry_password: ${{ secrets.GITHUB_TOKEN }}
           image_registry_username: ${{ github.actor }}
           wiz_client_secret: ${{ secrets.WIZ_CLIENT_SECRET }}
@@ -74,5 +77,3 @@ jobs:
     steps:
       - run: |
           exit ${{ (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && 1 || 0 }}
-
-

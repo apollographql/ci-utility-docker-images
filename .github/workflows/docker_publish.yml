@@ -33,6 +33,9 @@ jobs:
     name: Build and Push Docker Image
     if: ${{ needs.calculate-images-to-build.outputs.changed_dirs != '' && toJson(fromJson(needs.calculate-images-to-build.outputs.changed_dirs)) != '[]' }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: publish-${{ matrix.changed_dir }}
+      cancel-in-progress: false
     permissions:
       contents: write
       packages: write
@@ -46,21 +49,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@c2d88d3ecc89a9ef08eebf45d9637801dcee7eb5
+        with:
+          fetch-tags: true
       - name: Extract Details From config.yml
         id: extract_from_config_yaml
-        uses: ./.github/actions/extract_details_from_config
-        with:
-          config_yaml_path: ${{ github.workspace }}/${{ matrix.changed_dir }}/config.yml
-      - name: Check Image to Build Does Not Already Exist
-        run: |
-          if docker manifest inspect ${{ env.NAMESPACED_REGISTRY }}/${{ matrix.changed_dir }}:${{ steps.extract_from_config_yaml.outputs.current_version }} > /dev/null; then
-            echo "The tag "${{ env.NAMESPACED_REGISTRY }}/${{ matrix.changed_dir }}:${{ steps.extract_from_config_yaml.outputs.current_version }}" already exists in the repository. Do you need to bump the version in the config.yml?"
-            exit 1
-          fi
+        run: ./.github/scripts/extract_details_from_config.sh "${{ github.workspace }}/${{ matrix.changed_dir }}/config.yml"
+      - name: Get Next Version
+        id: get_next_version
+        run: ./.github/scripts/get_next_version.sh "${{ matrix.changed_dir }}"
       - name: Calculate Version
         id: calculate_version
         run: |
-          VERSION=${{ github.event_name == 'pull_request' && format('{0}-PR{1}.{2}', steps.extract_from_config_yaml.outputs.current_version, github.event.number, github.event.pull_request.head.sha) || steps.extract_from_config_yaml.outputs.current_version}}
+          VERSION=${{ github.event_name == 'pull_request' && format('{0}-PR{1}.{2}', steps.get_next_version.outputs.next_version, github.event.number, github.event.pull_request.head.sha) || steps.get_next_version.outputs.next_version}}
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - name: Build Docker Image (${{ matrix.changed_dir }})
         uses: ./.github/actions/build_docker_image
@@ -80,12 +80,20 @@ jobs:
           wiz_client_id: ${{ secrets.WIZ_CLIENT_ID }}
       - name: Create GitHub Release
         if: ${{ github.event_name != 'pull_request' }}
-        uses: comnoco/create-release-action@6ac85b5a67d93e181c1a8f97072e2e3ffc582ec4
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ matrix.changed_dir }}/v${{ steps.calculate_version.outputs.version }}
-          release_name: ${{ matrix.changed_dir }} - v${{ steps.calculate_version.outputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ matrix.changed_dir }}/v${{ steps.get_next_version.outputs.next_version }}"
+          if [ -n "${{ steps.get_next_version.outputs.current_tag }}" ]; then
+            gh release create "$TAG" \
+              --title "${{ matrix.changed_dir }} - v${{ steps.get_next_version.outputs.next_version }}" \
+              --generate-notes \
+              --notes-start-tag "${{ steps.get_next_version.outputs.current_tag }}"
+          else
+            gh release create "$TAG" \
+              --title "${{ matrix.changed_dir }} - v${{ steps.get_next_version.outputs.next_version }}" \
+              --generate-notes
+          fi
   check-builds-all-completes:
     name: Docker Images Built & Pushed
     if: ${{ always() }}
@@ -95,5 +103,3 @@ jobs:
     steps:
       - run: |
           exit ${{ (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && 1 || 0 }}
-
-
