@@ -17,7 +17,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@c2d88d3ecc89a9ef08eebf45d9637801dcee7eb5
       - id: find-all-docker-images
-        run: ./.github/scripts/find_all_docker_images.sh "${{ github.workspace }}"
+        run: |
+          images=$(find "${{ github.workspace }}" -maxdepth 1 -mindepth 1 -type d -name '[^.]*' \
+            | xargs -I{} basename {} \
+            | jq -Rsc '[split("\n")[] | select(. != "")]')
+          echo "docker_images=$images" >> "$GITHUB_OUTPUT"
     outputs:
       docker_images: ${{ steps.find-all-docker-images.outputs.docker_images }}
   build-and-push-images:
