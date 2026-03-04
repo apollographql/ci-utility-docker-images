@@ -10,19 +10,26 @@
         '/(^|/)Dockerfile\\.[^/]*$/'
       ],
       matchUpdateTypes: [
-        'major',
+        'major'
       ],
-      enabled: false,
+      enabled: false
     },
     {
       matchManagers: [
-        'github-actions',
+        'github-actions'
       ],
       digest: {
         groupName: 'GitHub Actions Digests',
-        groupSlug: 'gha-digests',
-      },
+        groupSlug: 'gha-digests'
+      }
     },
+    {
+      matchFileNames: [
+        '/(^|/)Dockerfile$/',
+        '/(^|/)Dockerfile\\.[^/]*$/'
+      ],
+      automerge: true
+    }
   ],
   customManagers: [
     {
