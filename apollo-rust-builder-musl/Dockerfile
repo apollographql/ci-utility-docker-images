@@ -1,5 +1,5 @@
 # renovate: datasource=github-releases depName=nodejs/node extractVersion=^v(?<version>.*)$
-ARG NODE_VERSION=20.20.0
+ARG NODE_VERSION=20.20.1
 
 FROM node:${NODE_VERSION}-alpine AS node
 
