@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
       matrix:
         include: ${{ fromJSON(inputs.matrix) }}
-    uses: apollographql/release-tooling/.github/workflows/build_and_publish.yml@9412d54a53b46cc3ad53a9ff2869d3e23a147a71
+    uses: apollographql/release-tooling/.github/workflows/build_and_publish.yml@6e506b1496daa2b481f20aea75e52a6d86dae5a8
     with:
       image_name: ${{ matrix.image }}
       image_description: ${{ matrix.description }}
@@ -60,7 +60,7 @@ jobs:
           fi
       - name: Pull image from internal registry
         id: pull
-        uses: apollographql/release-tooling/pull-image@9412d54a53b46cc3ad53a9ff2869d3e23a147a71
+        uses: apollographql/release-tooling/pull-image@6e506b1496daa2b481f20aea75e52a6d86dae5a8
         with:
           image_name: ${{ matrix.image }}
           tag: ${{ steps.sha.outputs.tag }}
@@ -94,7 +94,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - name: Publish to GHCR
-        uses: apollographql/release-tooling/release-ghcr@9412d54a53b46cc3ad53a9ff2869d3e23a147a71
+        uses: apollographql/release-tooling/release-ghcr@6e506b1496daa2b481f20aea75e52a6d86dae5a8
         with:
           image_name: ${{ matrix.image }}
           commit_sha: ${{ github.sha }}
