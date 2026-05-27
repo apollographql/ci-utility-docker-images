@@ -52,3 +52,12 @@ jobs:
       matrix: ${{ needs.calculate-images-to-build.outputs.matrix }}
       do_release: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     secrets: inherit
+
+  check-builds-all-completes:
+    name: Docker Images Built & Pushed
+    if: ${{ always() }}
+    needs: [calculate-images-to-build, pipeline]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          exit ${{ (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && 1 || 0 }}
