@@ -1,0 +1,119 @@
+name: Image Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      matrix:
+        description: >-
+          JSON array of per-image entries. Each entry must have image,
+          description, and platforms. When do_release is true, entries also
+          need ghcr_tag (the docker tag to publish to GHCR). When entries
+          also include git_tag, a git tag is pushed and a GitHub Release is
+          created (using current_tag, if non-empty, as the previous-tag
+          reference for release notes).
+        required: true
+        type: string
+      do_release:
+        description: Whether to run the release job. False for PR builds.
+        required: true
+        type: boolean
+
+jobs:
+  build:
+    name: Build (${{ matrix.image }})
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.matrix) }}
+    uses: apollographql/release-tooling/.github/workflows/build_and_publish.yml@9412d54a53b46cc3ad53a9ff2869d3e23a147a71
+    with:
+      image_name: ${{ matrix.image }}
+      image_description: ${{ matrix.description }}
+      platforms: ${{ matrix.platforms }}
+      context: ./${{ matrix.image }}
+      dockerfile_location: ./${{ matrix.image }}/Dockerfile
+
+  scan:
+    name: Scan (${{ matrix.image }})
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.matrix) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - name: Resolve image SHA tag
+        id: sha
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "tag=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Pull image from internal registry
+        id: pull
+        uses: apollographql/release-tooling/pull-image@9412d54a53b46cc3ad53a9ff2869d3e23a147a71
+        with:
+          image_name: ${{ matrix.image }}
+          tag: ${{ steps.sha.outputs.tag }}
+      - name: Scan Image
+        uses: docker://public-registry.wiz.io/wiz-app/wizcli@sha256:408d7651cf2bb05f614d04605d34a9639c806329d227022d988722679fadc0f9
+        with:
+          args: >-
+            scan container-image ${{ steps.pull.outputs.image_reference }}
+            --dockerfile ${{ matrix.image }}/Dockerfile
+            --policies "Apollo-Default-Vulnerabilities-Policy"
+            --sbom-format spdx-json
+            --sbom-output-file sbom.json
+            --timeout "0h9m0s"
+            --client-id ${{ secrets.WIZ_CLIENT_ID_V1 }}
+            --client-secret ${{ secrets.WIZ_CLIENT_SECRET_V1 }}
+
+  release:
+    name: Release (${{ matrix.image }})
+    needs: scan
+    if: inputs.do_release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.matrix) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - name: Publish to GHCR
+        uses: apollographql/release-tooling/release-ghcr@9412d54a53b46cc3ad53a9ff2869d3e23a147a71
+        with:
+          image_name: ${{ matrix.image }}
+          commit_sha: ${{ github.sha }}
+          tags: type=raw,value=${{ matrix.ghcr_tag }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tag and create GitHub Release
+        if: matrix.git_tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git tag "${{ matrix.git_tag }}" "${{ github.sha }}"
+          git push origin "${{ matrix.git_tag }}"
+          if [ -n "${{ matrix.current_tag }}" ]; then
+            gh release create "${{ matrix.git_tag }}" \
+              --title "${{ matrix.image }} - v${{ matrix.ghcr_tag }}" \
+              --generate-notes \
+              --notes-start-tag "${{ matrix.current_tag }}"
+          else
+            gh release create "${{ matrix.git_tag }}" \
+              --title "${{ matrix.image }} - v${{ matrix.ghcr_tag }}" \
+              --generate-notes
+          fi

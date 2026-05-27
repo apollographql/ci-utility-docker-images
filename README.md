@@ -1,40 +1,55 @@
 # CI Utility Docker Images
 
-This repo allows building of images that are used in other apollographl repos for **CI only**
+This repo allows building of images that are used in other apollographl repos for **CI only**.
 
 ## Adding a new image
 
 To add a new image, the easiest method is to copy an existing folder at the top level of the repo.
-Then you can change its name and update the Dockerfile to allow it to build your new image. The automated
-CI checks should take care of everything else.
+Then you can change its name and update the Dockerfile to allow it to build your new image. The
+automated CI checks should take care of everything else.
 
-## How Do Builds Work
+Each image directory must contain:
 
-There are three kinds of build configured on the repo:
+- `Dockerfile`
+- `config.yml` with `description` and a `platforms` list of `{ platform, runner }` pairs
+  describing the GitHub Actions runner used to build each platform.
 
-- A daily build - This build simply builds the repo as it currently is, however because each Docker Image _should_ run a
-  command to update dependencies that arise from the operating system i.e. (`yum update`, `dnf upgrade` etc.) this will
-  update base dependencies. Builds like this have docker tags like `apollo-rust-builder:0.2.0-202504301034`
-- A monthly build - These builds wrap up all the daily builds and publish a new patch version of each image. These
-  should have tags like `apollo-rust-builder:0.2.5`
-- On Demand builds - These builds run on each PR, and on each subsequent merge to main.
+## How builds work
 
-The first two builds will build all images in the repo, and the second only for files that have actually changed.
+The build/scan/release pipeline is shared between both workflows and lives in
+`.github/workflows/_image_pipeline.yml`. It:
+
+1. Builds the image (multi-arch) via the
+   [`apollographql/release-tooling`](https://github.com/apollographql/release-tooling)
+   reusable workflow, which pushes to Apollo's internal GCP artifact registry.
+2. Pulls the built image from the internal registry and scans it with Wiz CLI v1.
+3. Republishes the image to GHCR — either tagged with the next semver version (on push
+   to `main`), or with a `<current_version>-<UTC datetime>` suffix (daily build).
+
+There are two top-level workflows:
+
+- **`docker_publish.yml`** — runs on pull requests and on push to `main`. Only the image
+  directories with changed files in the triggering commit are built. PRs run build + scan
+  only; merges to `main` additionally publish the next patch version to GHCR, push a git
+  tag (`<image-dir>/v<version>`), and create a per-image GitHub Release. Images are tagged
+  like `apollo-rust-builder:0.30.1`.
+- **`docker_publish_daily.yml`** — runs daily at 10:00 UTC and on manual dispatch.
+  Rebuilds every image so that base-image security updates (`microdnf upgrade`, `apk
+  upgrade`, etc.) flow through, and publishes each with a tag like
+  `apollo-rust-builder:0.30.0-202504301034`. No git tag and no GitHub Release.
 
 ## Getting a fresh build
 
-At present this repo is set to build all images at 10am UTC every day. These are published to the in-repo image
-repositories with tags like `<<IMAGE_NAME>>:<<CURRENT_VERSION>>-<<DATE>>` e.g. `apollo-rust-builder:0.2.0-202504301034`,
-as such if you need something to satisfy a recent security fix, just use that tag.
+The daily build at 10:00 UTC publishes every image as
+`<image-name>:<current-version>-<datetime>`, e.g. `apollo-rust-builder:0.30.0-202504301034`.
+If you need something more recent (for example, to pick up a base-image fix that landed
+mid-day), trigger a manual run:
 
-If you require a build because a new version of a dependency has become available very recently. Then you can follow the
-following steps:
+1. Go to `Actions`.
+2. Run `Build & Publish Docker Images - Daily`.
 
-1. Go to `Actions`
-2. Kick off a run of `Build & Publish Docker Images - Daily`
+All images are built in parallel so kicking off the workflow doesn't delay the one you
+care about.
 
-_This will rebuild the entire repo but as all builds happen in parallel this will not adversely affect when the image
-you want will become available_
-
-We would also recommend that you don't rely on a daily build for a long period of time, and as soon as a fixed version
-is available update to that.
+We recommend not pinning to a daily tag long-term — switch back to a versioned tag as soon
+as one is available.
