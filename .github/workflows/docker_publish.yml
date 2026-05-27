@@ -29,10 +29,13 @@ jobs:
           dir_names: true
           dir_names_exclude_current_dir: true
           json: true
+          escape_json: false
       - name: Build image matrix
         id: build_matrix
+        env:
+          CHANGED_FILES: ${{ steps.calculate_changed_files.outputs.all_changed_files }}
         run: |
-          MATRIX=$(./.github/scripts/build_image_matrix.sh '${{ steps.calculate_changed_files.outputs.all_changed_files }}' --tags=versioned)
+          MATRIX=$(./.github/scripts/build_image_matrix.sh "$CHANGED_FILES" --tags=versioned)
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
           if [ "$(echo "$MATRIX" | jq 'length')" -gt 0 ]; then
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
