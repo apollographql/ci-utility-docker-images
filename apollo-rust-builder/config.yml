@@ -1,4 +1,6 @@
 description: Builder image for Rust binaries
 platforms:
-  - linux/arm64
-  - linux/amd64
+  - platform: linux/amd64
+    runner: ubuntu-latest
+  - platform: linux/arm64
+    runner: ubuntu-24.04-arm

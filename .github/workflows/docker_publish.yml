@@ -2,105 +2,62 @@ name: Build & Publish Changed Docker Images
 
 on:
   push:
-    branches: [ 'main' ]
+    branches: ['main']
   pull_request:
-env:
-  REGISTRY: ghcr.io
-  NAMESPACED_REGISTRY: ghcr.io/apollographql/ci-utility-docker-images
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   calculate-images-to-build:
     name: Calculate Images To Build
     runs-on: ubuntu-latest
     outputs:
-      changed_dirs: ${{ steps.filter_config_directories.outputs.changed_dirs }}
+      matrix: ${{ steps.build_matrix.outputs.matrix }}
+      has_changes: ${{ steps.build_matrix.outputs.has_changes }}
     steps:
-      - name: "Checkout repository"
-        uses: actions/checkout@c2d88d3ecc89a9ef08eebf45d9637801dcee7eb5
-      - name: "Calculate changed files directories"
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Calculate changed files directories
         id: calculate_changed_files
         uses: tj-actions/changed-files@abdd2f68ea150cee8f236d4a9fb4e0f2491abf1b
         with:
           dir_names: true
           dir_names_exclude_current_dir: true
           json: true
-      - name: "Filter out config directories"
-        id: filter_config_directories
-        run: |
-          CHANGED_DIRS=$(echo "${{ steps.calculate_changed_files.outputs.all_changed_files }}" | jq -c '[.[] | select(. | startswith(".") | not)'])
-          echo "changed_dirs=$CHANGED_DIRS" >> "$GITHUB_OUTPUT"
-  build-and-push-images:
-    name: Build and Push Docker Image
-    if: ${{ needs.calculate-images-to-build.outputs.changed_dirs != '' && toJson(fromJson(needs.calculate-images-to-build.outputs.changed_dirs)) != '[]' }}
-    runs-on: ubuntu-latest
-    concurrency:
-      group: publish-${{ matrix.changed_dir }}
-      cancel-in-progress: false
-    permissions:
-      contents: write
-      packages: write
-      attestations: write
-      id-token: write
-    needs:
-      - calculate-images-to-build
-    strategy:
-      matrix:
-        changed_dir: ${{ fromJSON(needs.calculate-images-to-build.outputs.changed_dirs ) }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@c2d88d3ecc89a9ef08eebf45d9637801dcee7eb5
-        with:
-          fetch-depth: 0
-          fetch-tags: true
-      - name: Extract Details From config.yml
-        id: extract_from_config_yaml
-        run: ./.github/scripts/extract_details_from_config.sh "${{ github.workspace }}/${{ matrix.changed_dir }}/config.yml"
-      - name: Get Next Version
-        id: get_next_version
-        run: ./.github/scripts/get_next_version.sh "${{ matrix.changed_dir }}"
-      - name: Calculate Version
-        id: calculate_version
-        run: |
-          VERSION=${{ github.event_name == 'pull_request' && format('{0}-PR{1}.{2}', steps.get_next_version.outputs.next_version, github.event.number, github.event.pull_request.head.sha) || steps.get_next_version.outputs.next_version}}
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Build Docker Image (${{ matrix.changed_dir }})
-        uses: ./.github/actions/build_docker_image
-        with:
-          image_description: ${{ steps.extract_from_config_yaml.outputs.description }}
-          directory: ${{ github.workspace }}/${{ matrix.changed_dir }}
-          image_name: ${{ matrix.changed_dir }}
-          namespaced_image_registry: ${{ env.NAMESPACED_REGISTRY }}
-          image_registry: ${{ env.REGISTRY }}
-          platforms: ${{ steps.extract_from_config_yaml.outputs.platforms }}
-          tags: |
-            type=semver,pattern={{version}},value=v${{ steps.calculate_version.outputs.version }}
-            type=sha,prefix=
-          image_registry_password: ${{ secrets.GITHUB_TOKEN }}
-          image_registry_username: ${{ github.actor }}
-          wiz_client_secret: ${{ secrets.WIZ_CLIENT_SECRET }}
-          wiz_client_id: ${{ secrets.WIZ_CLIENT_ID }}
-      - name: Create GitHub Release
-        if: ${{ github.event_name != 'pull_request' }}
+          escape_json: false
+      - name: Build image matrix
+        id: build_matrix
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGED_FILES: ${{ steps.calculate_changed_files.outputs.all_changed_files }}
         run: |
-          TAG="${{ matrix.changed_dir }}/v${{ steps.get_next_version.outputs.next_version }}"
-          if [ -n "${{ steps.get_next_version.outputs.current_tag }}" ]; then
-            gh release create "$TAG" \
-              --title "${{ matrix.changed_dir }} - v${{ steps.get_next_version.outputs.next_version }}" \
-              --generate-notes \
-              --notes-start-tag "${{ steps.get_next_version.outputs.current_tag }}"
+          MATRIX=$(./.github/scripts/build_image_matrix.sh "$CHANGED_FILES" --tags=versioned)
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          if [ "$(echo "$MATRIX" | jq 'length')" -gt 0 ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
           else
-            gh release create "$TAG" \
-              --title "${{ matrix.changed_dir }} - v${{ steps.get_next_version.outputs.next_version }}" \
-              --generate-notes
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
           fi
+
+  pipeline:
+    name: Image Pipeline
+    needs: calculate-images-to-build
+    if: needs.calculate-images-to-build.outputs.has_changes == 'true'
+    uses: ./.github/workflows/_image_pipeline.yml
+    with:
+      matrix: ${{ needs.calculate-images-to-build.outputs.matrix }}
+      do_release: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
   check-builds-all-completes:
     name: Docker Images Built & Pushed
     if: ${{ always() }}
+    needs: [calculate-images-to-build, pipeline]
     runs-on: ubuntu-latest
-    needs:
-      - build-and-push-images
     steps:
       - run: |
           exit ${{ (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && 1 || 0 }}
