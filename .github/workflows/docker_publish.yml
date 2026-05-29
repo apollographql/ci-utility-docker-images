@@ -1,39 +1,39 @@
 name: Build & Publish Changed Docker Images
 
 on:
+  pull_request:
   push:
     branches: ['main']
-  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  calculate-images-to-build:
+  calculate_images_to_build:
     name: Calculate Images To Build
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.build_matrix.outputs.matrix }}
       has_changes: ${{ steps.build_matrix.outputs.has_changes }}
+      matrix: ${{ steps.build_matrix.outputs.matrix }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
           fetch-depth: 0
           fetch-tags: true
+
       - name: Calculate changed files directories
         id: calculate_changed_files
         uses: tj-actions/changed-files@abdd2f68ea150cee8f236d4a9fb4e0f2491abf1b
         with:
           dir_names: true
           dir_names_exclude_current_dir: true
-          json: true
           escape_json: false
+          json: true
+
       - name: Build image matrix
         id: build_matrix
-        env:
-          CHANGED_FILES: ${{ steps.calculate_changed_files.outputs.all_changed_files }}
         run: |
           MATRIX=$(./.github/scripts/build_image_matrix.sh "$CHANGED_FILES" --tags=versioned)
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
@@ -42,21 +42,23 @@ jobs:
           else
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
           fi
+        env:
+          CHANGED_FILES: ${{ steps.calculate_changed_files.outputs.all_changed_files }}
 
   pipeline:
     name: Image Pipeline
-    needs: calculate-images-to-build
-    if: needs.calculate-images-to-build.outputs.has_changes == 'true'
+    needs: calculate_images_to_build
+    if: needs.calculate_images_to_build.outputs.has_changes == 'true'
     uses: ./.github/workflows/_image_pipeline.yml
     with:
-      matrix: ${{ needs.calculate-images-to-build.outputs.matrix }}
+      matrix: ${{ needs.calculate_images_to_build.outputs.matrix }}
       do_release: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     secrets: inherit
 
-  check-builds-all-completes:
+  check_builds_all_completes:
     name: Docker Images Built & Pushed
+    needs: [calculate_images_to_build, pipeline]
     if: ${{ always() }}
-    needs: [calculate-images-to-build, pipeline]
     runs-on: ubuntu-latest
     steps:
       - run: |

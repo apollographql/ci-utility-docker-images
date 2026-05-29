@@ -3,6 +3,10 @@ name: Image Pipeline
 on:
   workflow_call:
     inputs:
+      do_release:
+        description: Whether to run the release job. False for PR builds.
+        type: boolean
+        required: true
       matrix:
         description: >-
           JSON array of per-image entries. Each entry must have image,
@@ -11,12 +15,8 @@ on:
           also include git_tag, a git tag is pushed and a GitHub Release is
           created (using current_tag, if non-empty, as the previous-tag
           reference for release notes).
-        required: true
         type: string
-      do_release:
-        description: Whether to run the release job. False for PR builds.
         required: true
-        type: boolean
 
 jobs:
   build:
@@ -50,6 +50,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+
       - name: Resolve image SHA tag
         id: sha
         run: |
@@ -58,12 +59,14 @@ jobs:
           else
             echo "tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
           fi
+
       - name: Pull image from internal registry
         id: pull
         uses: apollographql/release-tooling/pull-image@6e506b1496daa2b481f20aea75e52a6d86dae5a8
         with:
           image_name: ${{ matrix.image }}
           tag: ${{ steps.sha.outputs.tag }}
+
       - name: Scan Image
         uses: docker://public-registry.wiz.io/wiz-app/wizcli:1.48.0@sha256:1b4b201b26fab4710e6dae43a1fed275d12e7cbaa5847c7cd9e09a88bf82cbac
         with:
@@ -84,8 +87,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      packages: write
       id-token: write
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -93,17 +96,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+
       - name: Publish to GHCR
         uses: apollographql/release-tooling/release-ghcr@6e506b1496daa2b481f20aea75e52a6d86dae5a8
         with:
-          image_name: ${{ matrix.image }}
           commit_sha: ${{ github.sha }}
-          tags: type=raw,value=${{ matrix.ghcr_tag }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          image_name: ${{ matrix.image }}
+          tags: type=raw,value=${{ matrix.ghcr_tag }}
+
       - name: Tag and create GitHub Release
         if: matrix.git_tag != ''
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git tag "${{ matrix.git_tag }}" "${{ github.sha }}"
           git push origin "${{ matrix.git_tag }}"
@@ -117,3 +120,5 @@ jobs:
               --title "${{ matrix.image }} - v${{ matrix.ghcr_tag }}" \
               --generate-notes
           fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
