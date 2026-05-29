@@ -6,7 +6,7 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  find-all-docker-images:
+  find_all_docker_images:
     name: Find All Docker Images To Build
     runs-on: ubuntu-latest
     outputs:
@@ -17,6 +17,7 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+
       - name: Build image matrix
         id: build_matrix
         run: |
@@ -25,9 +26,9 @@ jobs:
 
   pipeline:
     name: Image Pipeline
-    needs: find-all-docker-images
+    needs: find_all_docker_images
     uses: ./.github/workflows/_image_pipeline.yml
     with:
-      matrix: ${{ needs.find-all-docker-images.outputs.matrix }}
+      matrix: ${{ needs.find_all_docker_images.outputs.matrix }}
       do_release: true
     secrets: inherit
