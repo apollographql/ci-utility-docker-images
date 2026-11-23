@@ -8,7 +8,7 @@ on:
 jobs:
   find_all_docker_images:
     name: Find All Docker Images To Build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       matrix: ${{ steps.build_matrix.outputs.matrix }}
     steps:

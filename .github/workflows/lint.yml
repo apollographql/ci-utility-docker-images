@@ -16,7 +16,7 @@ concurrency:
 jobs:
   actionlint:
     name: Lint GitHub Actions Workflows
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
@@ -29,7 +29,7 @@ jobs:
 
   ghafmt:
     name: Check GitHub Actions Workflow Formatting
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
